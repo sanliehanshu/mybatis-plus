@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.windsun.wangs.mapper.UserMapper">
+
+    <select id="selectPageList" resultType="com.windsun.wangs.entry.User">
+        select
+        *
+        from
+        user
+        where
+        delete_flag=0
+        <if test="param.source!=null and param.source!=''">
+            and source=#{param.source}
+        </if>
+        <if test="param.name!=null and param.name!=''">
+            and name =#{param.name}
+        </if>
+    </select>
+
+    <select id="listAll" resultType="com.windsun.wangs.entry.User">
+        select *
+        from user
+    </select>
+</mapper>
