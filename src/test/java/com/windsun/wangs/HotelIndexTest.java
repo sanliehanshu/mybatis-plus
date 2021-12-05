@@ -1,5 +1,8 @@
 package com.windsun.wangs;
 
+import cn.hutool.core.lang.Snowflake;
+import cn.hutool.core.util.IdUtil;
+import cn.hutool.core.util.RandomUtil;
 import com.alibaba.fastjson.JSON;
 import com.windsun.wangs.entry.Hotel;
 import com.windsun.wangs.entry.HotelDoc;
@@ -18,6 +21,9 @@ import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
+import org.elasticsearch.search.aggregations.AggregationBuilders;
+import org.elasticsearch.search.aggregations.Aggregations;
+import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightField;
 import org.elasticsearch.search.sort.SortOrder;
@@ -74,6 +80,33 @@ public class HotelIndexTest {
         }
         // 3.发送请求
         client.bulk(request, RequestOptions.DEFAULT);
+    }
+
+    // 批量插入数据
+    @Test
+    void testInsertRequest() throws IOException {
+
+        Hotel hotel = new Hotel();
+        Snowflake snowflake = IdUtil.getSnowflake(1, 1);
+        long id = snowflake.nextId();
+        hotel.setId(id);
+        hotel.setAddress(RandomUtil.randomString(18));
+        hotel.setName(RandomUtil.randomString(8));
+        hotel.setScore(RandomUtil.randomInt(0, 50));
+        hotel.setBrand(RandomUtil.randomString(4));
+        hotel.setCity(RandomUtil.randomString(5));
+        hotel.setStarName(RandomUtil.randomString(5));
+        hotel.setBusiness(RandomUtil.randomString(5));
+        hotel.setLatitude(RandomUtil.randomDouble(0.0, 90.0) + "");
+        hotel.setLongitude(RandomUtil.randomDouble(90, 180.0) + "");
+        hotel.setPrice(RandomUtil.randomInt(361, 750));
+        HotelDoc hotelDoc = new HotelDoc(hotel);
+        // 准备request对象
+        IndexRequest request = new IndexRequest("hotel").id(hotelDoc.getId().toString());
+        // 准备json文档
+        request.source(JSON.toJSONString(hotelDoc), XContentType.JSON);
+        // 发送请求
+        client.index(request, RequestOptions.DEFAULT);
     }
 
     // 查询所有
@@ -180,6 +213,38 @@ public class HotelIndexTest {
         SearchResponse response = client.search(request, RequestOptions.DEFAULT);
         // 4.解析结果
         handleResponse(response);
+    }
+
+    // 聚合查询
+    @Test
+    void testAggregation() throws IOException {
+        // 1.准备request
+        SearchRequest request = new SearchRequest("hotel");
+        // 2.准备dsl
+        // 2.1 设置size
+        request.source().size(0);
+        // 2.2 聚合
+        request.source().aggregation(AggregationBuilders
+                // 设置查询的名字
+                .terms("brandAgg")
+                // 查询的字段
+                .field("brand")
+                // 条数
+                .size(20)
+        );
+        // 3.发送请求
+        SearchResponse response = client.search(request, RequestOptions.DEFAULT);
+        // 4.解析聚合结果
+        Aggregations aggregations = response.getAggregations();
+        // 根据名称获取聚合结果
+        Terms brandTerms = aggregations.get("brandAgg");
+        // 获取桶
+        List<? extends Terms.Bucket> buckets = brandTerms.getBuckets();
+        for (Terms.Bucket bucket : buckets) {
+            // 获取key，也就是品牌名称
+            String keyAsString = bucket.getKeyAsString();
+            System.out.println(keyAsString);
+        }
     }
 
     private void handleResponse(SearchResponse response) {

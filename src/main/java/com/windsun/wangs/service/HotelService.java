@@ -9,4 +9,10 @@ import com.windsun.wangs.entry.Hotel;
  * @Date：2021/11/30 09:54
  */
 public interface HotelService extends IService<Hotel> {
+
+    /**
+     * 插入
+     * @param hotel
+     */
+    void insertHotel(Hotel hotel);
 }

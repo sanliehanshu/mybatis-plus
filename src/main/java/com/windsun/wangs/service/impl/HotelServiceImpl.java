@@ -13,4 +13,13 @@ import org.springframework.stereotype.Service;
  */
 @Service
 public class HotelServiceImpl extends ServiceImpl<HotelMapper, Hotel> implements HotelService {
+    /**
+     * 插入
+     *
+     * @param hotel
+     */
+    @Override
+    public void insertHotel(Hotel hotel) {
+        baseMapper.insert(hotel);
+    }
 }
