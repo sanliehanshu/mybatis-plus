@@ -20,7 +20,16 @@ public class ArrayListThread {
         for (int i = 0; i < 30; i++) {
             new Thread(() -> {
                 list.add(UUID.randomUUID().toString().substring(0, 8));
-                System.out.println(list);
+                //System.out.println(list);
+            }, String.valueOf(i)).start();
+        }
+
+        for (int i = 0; i < 10; i++) {
+            new Thread(() -> {
+                list.add(UUID.randomUUID().toString().substring(0, 8));
+                //System.out.println(list);
+                Singleton3.otherMethod();
+                System.out.println( Singleton3.getSingleton());
             }, String.valueOf(i)).start();
         }
     }
